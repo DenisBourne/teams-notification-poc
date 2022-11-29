@@ -21,6 +21,5 @@ public class Notification implements Serializable {
     private String color;
     private String notificationTitle;
     private String notificationSummary;
-    private Section section;
-    private boolean markdown;
+    private List<Section> sections;
 }

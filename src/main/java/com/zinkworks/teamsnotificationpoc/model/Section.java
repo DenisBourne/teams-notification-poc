@@ -17,4 +17,5 @@ public class Section {
     private String activityTitle;
     private String activitySubtitle;
     private List<Fact> facts;
+    private boolean markdown;
 }
