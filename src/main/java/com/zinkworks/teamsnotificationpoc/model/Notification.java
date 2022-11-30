@@ -1,6 +1,5 @@
 package com.zinkworks.teamsnotificationpoc.model;
 
-import com.zinkworks.teamsnotificationpoc.constants.ColorCode;
 import com.zinkworks.teamsnotificationpoc.constants.NotificationType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,7 +16,7 @@ import java.util.List;
 @NoArgsConstructor
 @ToString
 public class Notification implements Serializable {
-    private NotificationType type;
+    private String type;
     private String color;
     private String notificationTitle;
     private String notificationSummary;
