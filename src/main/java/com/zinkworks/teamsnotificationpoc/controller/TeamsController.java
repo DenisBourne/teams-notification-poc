@@ -4,7 +4,9 @@ import com.zinkworks.teamsnotificationpoc.constants.PathConstants;
 import com.zinkworks.teamsnotificationpoc.exception.ExceptionDetails;
 import com.zinkworks.teamsnotificationpoc.model.TeamsNotificationRequest;
 import com.zinkworks.teamsnotificationpoc.service.TeamsNotificationService;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -22,9 +24,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(PathConstants.BASE_URL)
+@OpenAPIDefinition(info = @Info(title = "Teams Notification Service POC",
+		version = "0.0.1-SNAPSHOT",
+		description = "Teams notification"))
 @Slf4j
 public class TeamsController {
 	@Autowired private TeamsNotificationService service;
+
 
 	@Operation(
 			summary = "Send notification message to Teams channel",

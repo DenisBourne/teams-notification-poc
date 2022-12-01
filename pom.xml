@@ -16,10 +16,10 @@
     <properties>
         <java.version>17</java.version>
         <spotless.version>2.22.5</spotless.version>
-        <openapi.ui.version>1.6.9</openapi.ui.version>
+        <openapi.ui.version>1.6.13</openapi.ui.version>
         <testcontainers.version>1.17.2</testcontainers.version>
         <docker-java.version>3.2.13</docker-java.version>
-        <swagger-annotations.version>2.2.1</swagger-annotations.version>
+        <swagger-annotations.version>2.2.6</swagger-annotations.version>
         <json.version>20220320</json.version>
         <jackson-databind.version>2.13.3</jackson-databind.version>
     </properties>
