@@ -2,10 +2,10 @@ package com.zinkworks.teamsnotificationpoc.model;
 
 import com.zinkworks.teamsnotificationpoc.constants.Channel;
 import com.zinkworks.teamsnotificationpoc.constants.Level;
-import com.zinkworks.teamsnotificationpoc.constants.NotificationType;
-import lombok.*;
-
+import jakarta.annotation.Nullable;
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
+import lombok.*;
 
 @Data
 @Builder
@@ -13,10 +13,10 @@ import java.util.List;
 @NoArgsConstructor
 @ToString
 public class TeamsNotificationRequest {
-    private Level level;
-    private Channel channel;
-    private String type;
-    private String title;
-    private String summary;
-    private List<Section> sections;
+	@Nullable private Level level;
+	@NotNull private Channel channel;
+	@NotNull private String type;
+	private String title;
+	@NotNull private String summary;
+	private List<Section> sections;
 }

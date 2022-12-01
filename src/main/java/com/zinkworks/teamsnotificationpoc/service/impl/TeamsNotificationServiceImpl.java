@@ -1,88 +1,105 @@
 package com.zinkworks.teamsnotificationpoc.service.impl;
 
+import com.zinkworks.teamsnotificationpoc.constants.Channel;
 import com.zinkworks.teamsnotificationpoc.constants.ColorCode;
-import com.zinkworks.teamsnotificationpoc.model.*;
+import com.zinkworks.teamsnotificationpoc.constants.Level;
+import com.zinkworks.teamsnotificationpoc.constants.NotificationConstants;
+import com.zinkworks.teamsnotificationpoc.exception.InvalidRequestException;
+import com.zinkworks.teamsnotificationpoc.model.ChannelURL;
+import com.zinkworks.teamsnotificationpoc.model.Fact;
+import com.zinkworks.teamsnotificationpoc.model.Notification;
+import com.zinkworks.teamsnotificationpoc.model.Section;
+import com.zinkworks.teamsnotificationpoc.model.TeamsNotificationRequest;
 import com.zinkworks.teamsnotificationpoc.service.TeamsNotificationService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 @Service
 @Slf4j
 public class TeamsNotificationServiceImpl implements TeamsNotificationService {
+	@Override
+	public void sendWebHook(TeamsNotificationRequest teamsNotificationRequest) throws Exception {
+		RestTemplate restTemplate = new RestTemplate();
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		Notification notification = buildNotification(teamsNotificationRequest);
 
-    private String colorCode;
-    private String channel;
-    @Override
-    public void createWebHook(TeamsNotificationRequest teamsNotificationRequest) {
+		Map<String, Object> map = getNotificationMap(notification);
 
-        log.info("Request: {}", teamsNotificationRequest);
+		HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
+		restTemplate.postForEntity(notification.getChannel(), entity, String.class);
+	}
 
-        List<Fact> facts = teamsNotificationRequest.getSections().get(0).getFacts();
-        List<Section> sections = new ArrayList<>();
-        Section section = Section.builder()
-                .activityTitle(teamsNotificationRequest.getSections().get(0).getActivityTitle())
-                .activitySubtitle(teamsNotificationRequest.getSections().get(0).getActivitySubtitle())
-                .facts(facts)
-                .markdown(true)
-                .build();
-        sections.add(section);
+	private Notification buildNotification(TeamsNotificationRequest teamsNotificationRequest)
+			throws Exception {
+		log.info("Request: {}", teamsNotificationRequest);
+		List<Section> sections = new ArrayList<>();
 
-        switch (teamsNotificationRequest.getLevel()) {
-            case ERROR -> colorCode = ColorCode.ERROR;
-            case WARN -> colorCode = ColorCode.WARN;
-            case OPERATIONAL -> colorCode = ColorCode.OPERATIONAL;
-        }
+		if (teamsNotificationRequest.getType() == null
+				|| teamsNotificationRequest.getChannel() == null
+				|| teamsNotificationRequest.getSummary() == null) {
+			throw new InvalidRequestException(
+					"Request does not contain correct parameters please check and try again");
+		}
 
-        switch (teamsNotificationRequest.getChannel()) {
-            case GENERAL -> channel = Channel.general;
-            case METRIC -> channel = Channel.metric;
-        }
+		if (teamsNotificationRequest.getSections() != null) {
+			sections.add(getSections(teamsNotificationRequest));
+		}
 
-        Notification notification = Notification.builder()
-                .type(teamsNotificationRequest.getType())
-                .color(colorCode)
-                .notificationTitle(teamsNotificationRequest.getTitle())
-                .notificationSummary(teamsNotificationRequest.getSummary()).
-                sections(sections)
-                .build();
+		return Notification.builder()
+				.type(teamsNotificationRequest.getType())
+				.channel(getChannel(teamsNotificationRequest.getChannel()))
+				.color(getColorCode(teamsNotificationRequest.getLevel()))
+				.notificationTitle(teamsNotificationRequest.getTitle())
+				.notificationSummary(teamsNotificationRequest.getSummary())
+				.sections(sections)
+				.build();
+	}
 
-        log.info("Send Webhook notification: {}", notification);
+	private Map<String, Object> getNotificationMap(Notification notification) {
+		Map<String, Object> map = new HashMap<>();
+		map.put(NotificationConstants.TYPE, notification.getType());
+		map.put(NotificationConstants.THEME_COLOR, notification.getColor());
+		map.put(NotificationConstants.TITLE, notification.getNotificationTitle());
+		map.put(NotificationConstants.SUMMARY, notification.getNotificationSummary());
+		map.put(NotificationConstants.SECTIONS, notification.getSections());
+		return map;
+	}
 
-        try {
-            sendWebHook(notification, channel);
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
-    }
+	private Section getSections(TeamsNotificationRequest teamsNotificationRequest) {
+		List<Fact> facts = teamsNotificationRequest.getSections().get(0).getFacts();
+		return Section.builder()
+				.activityTitle(teamsNotificationRequest.getSections().get(0).getActivityTitle())
+				.activitySubtitle(teamsNotificationRequest.getSections().get(0).getActivitySubtitle())
+				.facts(facts)
+				.markdown(true)
+				.build();
+	}
 
-    @Override
-    public void sendWebHook(Notification notification, String channel) throws URISyntaxException {
-        RestTemplate restTemplate = new RestTemplate();
+	private String getColorCode(Level colorValue) {
+		if (colorValue == null) {
+			return ColorCode.DEFAULT;
+		} else {
+			return switch (colorValue) {
+				case ERROR -> ColorCode.ERROR;
+				case WARN -> ColorCode.WARN;
+				case OPERATIONAL -> ColorCode.OPERATIONAL;
+			};
+		}
+	}
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        Map<String, Object> map = new HashMap<>();
-        map.put("@type", notification.getType());
-        map.put("themeColor", notification.getColor());
-        map.put("title", notification.getNotificationTitle());
-        map.put("summary", notification.getNotificationSummary());
-        map.put("sections", notification.getSections());
-
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
-        ResponseEntity<String> response = restTemplate.postForEntity(channel, entity, String.class);
-
-        log.info("Send Webhook notification: {}, response: {}", notification, response);
-    }
+	private String getChannel(Channel channel) {
+		return switch (channel) {
+			case GENERAL -> ChannelURL.general;
+			case METRIC -> ChannelURL.metric;
+		};
+	}
 }
