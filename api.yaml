@@ -1,0 +1,72 @@
+openapi: "3.0.3"
+info:
+    title: "teams_notification_poc API"
+    description: "teams_notification_poc API"
+    version: "1.0.0"
+servers:
+    -   url: "http://localhost:8080"
+paths:
+    /poc/v1/notification:
+        post:
+            summary: "POST poc/v1/notification"
+            operationId: "sendNotification"
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/TeamsNotificationRequest"
+                required: true
+            responses:
+                "200":
+                    description: "OK"
+                    content:
+                        '*/*':
+                            schema:
+                                $ref: "#/components/schemas/ResponseEntity"
+components:
+    schemas:
+        Fact:
+            type: "object"
+            properties:
+                name:
+                    type: "string"
+                value:
+                    type: "string"
+        Section:
+            type: "object"
+            properties:
+                activityTitle:
+                    type: "string"
+                activitySubtitle:
+                    type: "string"
+                facts:
+                    type: "array"
+                    items:
+                        $ref: "#/components/schemas/Fact"
+                markdown:
+                    type: "boolean"
+        TeamsNotificationRequest:
+            type: "object"
+            properties:
+                level:
+                    type: "string"
+                channel:
+                    type: "string"
+                type:
+                    type: "string"
+                title:
+                    type: "string"
+                summary:
+                    type: "string"
+                sections:
+                    type: "array"
+                    items:
+                        $ref: "#/components/schemas/Section"
+        HttpHeaders:
+            type: "object"
+            properties: { }
+        ResponseEntity:
+            type: "object"
+            properties:
+                headers:
+                    $ref: "#/components/schemas/HttpHeaders"
