@@ -13,8 +13,8 @@ import lombok.*;
 @NoArgsConstructor
 @ToString
 public class TeamsNotificationRequest {
-	@Nullable private Level level;
-	@NotNull private Channel channel;
+	@Nullable private String level;
+	@NotNull private String channel;
 	@NotNull private String type;
 	private String title;
 	@NotNull private String summary;

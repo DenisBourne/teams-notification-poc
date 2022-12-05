@@ -15,6 +15,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -75,20 +78,24 @@ public class TeamsNotificationServiceImpl implements TeamsNotificationService {
 	}
 
 	private Section getSections(TeamsNotificationRequest teamsNotificationRequest) {
-		List<Fact> facts = teamsNotificationRequest.getSections().get(0).getFacts();
+		Section section = teamsNotificationRequest.getSections().stream()
+				.filter(Objects::nonNull)
+				.findFirst()
+				.orElseThrow();
+		List<Fact> facts = section.getFacts();
 		return Section.builder()
-				.activityTitle(teamsNotificationRequest.getSections().get(0).getActivityTitle())
-				.activitySubtitle(teamsNotificationRequest.getSections().get(0).getActivitySubtitle())
+				.activityTitle(section.getActivityTitle())
+				.activitySubtitle(section.getActivitySubtitle())
 				.facts(facts)
 				.markdown(true)
 				.build();
 	}
 
-	private String getColorCode(Level colorValue) {
-		if (colorValue == null) {
+	private String getColorCode(String colorValue) {
+		if (colorValue == null || colorValue.isEmpty()) {
 			return ColorCode.DEFAULT;
 		} else {
-			return switch (colorValue) {
+			return switch (Level.valueOf(colorValue.toUpperCase())) {
 				case ERROR -> ColorCode.ERROR;
 				case WARN -> ColorCode.WARN;
 				case OPERATIONAL -> ColorCode.OPERATIONAL;
@@ -96,8 +103,8 @@ public class TeamsNotificationServiceImpl implements TeamsNotificationService {
 		}
 	}
 
-	private String getChannel(Channel channel) {
-		return switch (channel) {
+	private String getChannel(String channel) {
+		return switch (Channel.valueOf(channel.toUpperCase())) {
 			case GENERAL -> ChannelURL.general;
 			case METRIC -> ChannelURL.metric;
 		};
